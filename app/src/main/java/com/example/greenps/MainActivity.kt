@@ -4,6 +4,8 @@ import android.content.pm.PackageManager
 import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -11,15 +13,16 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
-import java.util.jar.Manifest
-import java.util.jar.Pack200
+import com.google.android.gms.maps.model.*
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener  {
 
-    private lateinit var map:GoogleMap
+    private lateinit var map: GoogleMap
+    private var radius: Double = 5000.0
+    private var btnIngre: Button? = null
+    private var txtRadius: EditText? =null
 
+    private var  mapCircle:Circle? = null
     companion object{
         const val REQUEST_CODE_LOCATION = 0
 
@@ -28,9 +31,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMyLoca
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        btnIngre = findViewById<Button>(R.id.btnIngresar)
+        txtRadius  = findViewById<EditText>(R.id.txtxRadious)
         createFragment()
-    }
 
+        btnIngre!!.setOnClickListener {
+            radius =  txtRadius!!.text.toString().toDouble()
+            val coordinates = LatLng(4.6372, -74.0838)
+            drawCircle(coordinates)
+        }
+    }
     private fun createFragment() {
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -45,8 +55,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMyLoca
     }
 
     private fun createMarker() {
-        val coordinates = LatLng(4.657516, -74.094293)
-        val marker = MarkerOptions().position(coordinates).title("Parque Central Simón Bolívar")
+
+        val coordinates = LatLng(4.6372, -74.0838)
+        drawCircle(coordinates)
+        val marker = MarkerOptions().position(coordinates).title("Universidad Nacional de Colombia")
+            .snippet("Es una universidad pública " )
+            .icon(BitmapDescriptorFactory.fromResource(R.drawable.arrow))
+
         map.addMarker(marker)
         map.animateCamera(
             CameraUpdateFactory.newLatLngZoom(coordinates, 12f),
@@ -143,8 +158,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMyLoca
     }
 
     override fun onMyLocationButtonClick(): Boolean {
-        Toast.makeText(this, "Boton pulsado", Toast.LENGTH_SHORT).show()
-        return false
+        val coordinates = LatLng(4.6372, -74.0838)
+        drawCircle(coordinates)
+        val marker = MarkerOptions().position(coordinates).title("Universidad Nacional de Colombia")
+            .snippet("Es una universidad pública " )
+            .icon(BitmapDescriptorFactory.fromResource(R.drawable.arrow))
+
+        map.addMarker(marker)
+        map.animateCamera(
+            CameraUpdateFactory.newLatLngZoom(coordinates, 12f),
+            4000,
+            null
+        )
+        return true
     }
 
     override fun onMyLocationClick(p0: Location) {
@@ -152,4 +178,32 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMyLoca
 
     }
 
+    private fun drawCircle(point: LatLng) {
+
+        if(mapCircle!=null){
+            mapCircle!!.remove();
+        }
+
+        // Instantiating CircleOptions to draw a circle around the marker
+        val circleOptions = CircleOptions()
+
+        // Specifying the center of the circle
+        circleOptions.center(point)
+
+        // Radius of the circle
+        circleOptions.radius(radius)
+
+        // Border color of the circle
+        circleOptions.strokeColor(-0xffff01)
+
+        // Fill color of the circle
+        circleOptions.fillColor(0x110000FF)
+
+        // Border width of the circle
+        circleOptions.strokeWidth(2f)
+
+
+        // Adding the circle to the GoogleMap
+        mapCircle = map.addCircle(circleOptions)
+    }
 }
